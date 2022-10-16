@@ -15,37 +15,28 @@ def problem(N, seed=None):
     ]
 def InitialState(list_):
     all_lists = sorted(problem(N, seed=42), key=lambda l: len(l))
-    return all_lists[0]
-
-
+    return all_lists
 
 
 class State:
-    def _init_(self, data: np.ndarray):
+    def __init__(self, data : np.ndarray):
         self._data = data.copy()
         self._data.flags.writeable = False
 
-    def _hash_(self):
+    def __hash__(self):
         return hash(bytes(self._data))
 
-    def _eq_(self, other):
+    def __eq__(self, other):
         return bytes(self._data) == bytes(other._data)
 
-    def _lt_(self, other):
+    def __lt__(self, other):
         return bytes(self._data) < bytes(other._data)
 
-    def _str_(self):
+    def __str__(self):
         return str(self._data)
 
-    def _repr_(self):
+    def __repr__(self):
         return repr(self._data)
-
-    '''
-    def data.tolist(self):
-        list_tot = list()
-        list_tot.append(self._data.all())
-        return list_tot
-    '''
 
     @property
     def data(self):
@@ -56,7 +47,8 @@ class State:
 
 def priority_function(state: State):
      list_ = state.data.tolist()
-     return sum(len(s) for s in list_)
+     state_cost_ = sum(len(s) for s in list_)
+     return state_cost_ + h(state)
 
 def possible_actions(all_list: list, actualState):
     all_list1 = all_list.copy()
@@ -70,13 +62,21 @@ def goal_test(state,N):
     for el in state:
         for a in el: 
             set_.add(a)
-    set_2 = set(range(N))
-    return set_ == set_2
-
+    set_goal = set(range(N))
+    return set_ == set_goal
 
 def result(state, a):
     state.append(a)
-    return State(np.array(state, dtype=object))
+    return State(np.array(state,dtype=object))
+
+def h(state):
+    goal=set()
+    for list_ in state._data:
+        goal.update(list_)
+
+    return N-len(goal)
+
+
 
 def search(
     all_list,
@@ -94,7 +94,6 @@ def search(
     state = initial_state
     parent_state[state] = None
     state_cost[state] = 0
-    solution = []
     all_list.sort()
     all_list = sorted(list(k for k,_ in itertools.groupby(all_list)), key = lambda l : len(l))
 
@@ -123,30 +122,33 @@ def search(
         path.append(s.copy_data())
         s = parent_state[s]
 
-    print(f"Found a solution in {len(path):,} steps; visited {len(state_cost):,} states")
-    print(f"Initial blocks : {all_list}")
-    print(f"Solution: {state}")
-    #print(f"Parent State Dict: {parent_state}")
-    #print(f"Path: {list(reversed(path))}")
+    print(f"Found a solution in {len(path):,} steps; visited {len(state_cost):,} states; space costs {sum(state_cost.values())}")
+    print(f"bloat={(sum(len(_) for _ in state._data)-N)/N*100:.0f}%")
+    #print(f"Initial blocks : {all_list}")
+    #print(f"Solution: {state}")
     return list(reversed(path))            
 
 parent_state = dict()
 state_cost = dict()
+initial_state = State(np.array([]))
 
-for N in [5]:
+for N in [5,10,20,100,500,1000]:
     start = time.time()
     GOAL = set(range(N))
     all_lists = problem(N, seed=42)
+
+    print(f"Problem with N={N}")
+
     search(
         all_lists,
-        initial_state = State(np.array([],dtype = object)),
-        goal_test=goal_test,
-        parent_state=parent_state,
-        state_cost=state_cost,
-        priority_function= priority_function,
-        unit_cost= lambda a: len(a),
-        number= N
+        initial_state = initial_state,
+        goal_test = goal_test,
+        parent_state = parent_state,
+        state_cost = state_cost,
+        priority_function = lambda s: state_cost[s] + h(s),
+        unit_cost = lambda a: 1,
+        number = N
         )
     end = time.time()
 
-    print(f"Done in {end-start} seconds")
+    print(f"Done in {end-start} seconds\n\n")
