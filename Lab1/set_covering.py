@@ -7,16 +7,12 @@ import logging
 import itertools
 import time
 
-def problem(N, seed=None):
+def problem(N, seed=42):
     random.seed(seed)
     return [
         list(set(random.randint(0, N - 1) for n in range(random.randint(N // 5, N // 2))))
         for n in range(random.randint(N, N * 5))
     ]
-def InitialState(list_):
-    all_lists = sorted(problem(N, seed=42), key=lambda l: len(l))
-    return all_lists
-
 
 class State:
     def __init__(self, data : np.ndarray):
@@ -50,11 +46,12 @@ def priority_function(state: State):
      state_cost_ = sum(len(s) for s in list_)
      return state_cost_ + h(state)
 
-def possible_actions(all_list: list, actualState):
+def possible_actions(all_list: list, actualState: list):
     all_list1 = all_list.copy()
     for i in actualState:
         while i in all_list1:
             all_list1.remove(i)
+    all_list1 = sorted(all_list1, key= lambda l: len(l))
     return all_list1 
     
 def goal_test(state,N):
@@ -73,7 +70,6 @@ def h(state):
     goal=set()
     for list_ in state._data:
         goal.update(list_)
-
     return N-len(goal)
 
 
@@ -94,8 +90,7 @@ def search(
     state = initial_state
     parent_state[state] = None
     state_cost[state] = 0
-    all_list.sort()
-    all_list = sorted(list(k for k,_ in itertools.groupby(all_list)), key = lambda l : len(l))
+    #all_list.sort()
 
     while state is not None and not goal_test(state.data.tolist(),N):
         for a in possible_actions(all_list,state.data.tolist()):
@@ -122,10 +117,9 @@ def search(
         path.append(s.copy_data())
         s = parent_state[s]
 
-    print(f"Found a solution in {len(path):,} steps; visited {len(state_cost):,} states; space costs {sum(state_cost.values())}")
-    print(f"bloat={(sum(len(_) for _ in state._data)-N)/N*100:.0f}%")
+    print(f"A* W={sum(len(_) for _ in state._data)}; bloat={(sum(len(_) for _ in state._data)-N)/N*100:.0f}%")
     #print(f"Initial blocks : {all_list}")
-    #print(f"Solution: {state}")
+    print(f"Solution: {state}")
     return list(reversed(path))            
 
 parent_state = dict()
