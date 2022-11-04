@@ -1,7 +1,7 @@
 # Set covering with GA
 
 In this repository is present a possible solution for the set covering problem solved with a genetic algorithm.
-I wrote this code with my colleague Luca Villani(s304992).
+I wrote this code with my colleague Luca Marcellino(s292950).
 
 ## Input parameters
 
