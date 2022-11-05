@@ -86,7 +86,7 @@ def removeDuplicates(population):
 
 
 #Inital list of lists
-N = [5,10,20,100,1000]
+N = [5,10,20,100,500,1000]
 dictPrint = dict()
 dictPrint["N"] = []
 dictPrint["Time"] = []
